@@ -17,12 +17,12 @@ contract RebaseToken is ERC20, Ownable, AccessControl {
     error RebaseToken__InterestRateCanOnlyDecrease(uint256 oldInterestRate, uint256 newInterestRate);
 
     //STATE VARIABLES
-    uint256 private s_interestRate = 5e10;
+    uint256 private s_interestRate = (5 * PRECISION_FACTOR) / 1e8;
     mapping(address user => uint256 interestRate) private s_userInterestRate;
     mapping(address user => uint256 lastUpdatedTimestamp) private s_userLastUpdatedTimestamp;
 
     //CONSTANTS
-    uint256 private constant PRECISION_FACTOR = 1e18;
+    uint256 private constant PRECISION_FACTOR = 1e27;
     bytes32 private constant MINT_AND_BURN_ROLE = keccak256("MINT_AND_BURN_ROLE");
 
     //EVENTS
