@@ -12,9 +12,11 @@ contract RebaseTokenTest is Test {
 
     address public OWNER = makeAddr("OWNER");
     address public USER = makeAddr("USER");
+    uint256 public SEND_VALUE = 1e5;
 
     function setUp() public {
         vm.startPrank(OWNER);
+        vm.deal(OWNER, 1e18);
         rebaseToken = new RebaseToken();
         vault = new Vault(IRebaseToken(address(rebaseToken)));
         rebaseToken.grantMintAndBurnRole(address(vault));
@@ -111,4 +113,45 @@ contract RebaseTokenTest is Test {
         rebaseToken.setInterestRate(newInterestRate);
         vm.stopPrank();
     }
+
+        function testCannotCallMint() public {
+        // Deposit funds
+        vm.startPrank(USER);
+        uint256 interestRate = rebaseToken.getInterestRate();
+        vm.expectRevert();
+        rebaseToken.mint(USER, SEND_VALUE);
+        vm.stopPrank();
+    }
+
+    function testCannotCallBurn() public {
+        // Deposit funds
+        vm.startPrank(USER);
+        vm.expectRevert();
+        rebaseToken.burn(USER, SEND_VALUE);
+        vm.stopPrank();
+    }
+
+        function test_InterestRateCanOnlyDecrease(uint256 newInterestRate) public {
+        uint256 initialInterestRate = rebaseToken.getInterestRate();
+        newInterestRate = bound(newInterestRate, initialInterestRate+1, type(uint96).max);
+        // vm.assume(newInterestRate != 5e10);
+        vm.prank(OWNER);
+        vm.expectRevert();
+        rebaseToken.setInterestRate(newInterestRate);
+        assertEq(rebaseToken.getInterestRate(), initialInterestRate);
+    }
+
+    // function testGetPrincipleAmount() public {
+    //     uint256 amount = 1e5;
+    //     vm.deal(USER, amount);
+    //     vm.prank(USER);
+    //     vault.deposit{value: amount}();
+    //     uint256 principleAmount = rebaseToken.principalBalanceOf(USER);
+    //     assertEq(principleAmount, amount);
+
+    //     // check that the principle amount is the same after some time has passed
+    //     vm.warp(block.timestamp + 1 days);
+    //     uint256 principleAmountAfterWarp = rebaseToken.principalBalanceOf(USER);
+    //     assertEq(principleAmountAfterWarp, amount);
+    // }
 }
